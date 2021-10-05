@@ -227,7 +227,7 @@ Credits
 [issues-shield]: https://img.shields.io/github/issues/erobin27/UFC-API.svg?style=for-the-badge
 [issues-url]: https://github.com/erobin27/UFC-API/issues
 [license-shield]: https://img.shields.io/github/license/erobin27/UFC-API.svg?style=for-the-badge
-[license-url]: https://github.com/erobin27/UFC-API/LICENSE.txt
+[license-url]: https://github.com/erobin27/UFC-API/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/elijah-robinson98/
 [product-screenshot]: images/screenshot.png
