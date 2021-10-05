@@ -56,7 +56,7 @@ app.get('/api/v1/allEvents', async (req, res) => { //SLOW
         res.send({'Error' : 'Your specified url is not contained. Try using the /eventLinks feature to see available events'})
     }
 
-    
+
     res.send(allEvents)
     console.log('Success')
 });
@@ -119,5 +119,5 @@ app.listen(port, () => {
         this.logCopy(colorStart, currentDate, colorEnd, data);
     };
 
-    console.log('hi');
+    console.log('Server Started.');
 });
