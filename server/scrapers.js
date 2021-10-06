@@ -33,10 +33,15 @@ async function scrapeNextEvent(url) {
         for (let res of outcomeList){
             outcome.push(res.childNodes[1].textContent)
         }
+        let method = document.getElementsByClassName('c-listing-fight__result-text method');
+        let time = document.getElementsByClassName('c-listing-fight__result-text time');
+        let round = document.getElementsByClassName('c-listing-fight__result-text round');
+
         //Loop through all fights and create an array with objects including their names and odds
         for(let i = 0; i < givenNames.length-1; i+=2){
             fightTitle = lastNames[i].textContent + ' vs ' + lastNames[i+1].textContent
             let obj2 = {};
+            obj2['OutcomeInfo'] = {'method': method[i/2].textContent, 'time': time[i/2].textContent,'round': round[i/2].textContent};
             obj2['Red'] =  {'Name': givenNames[i].textContent + ' ' +lastNames[i].textContent, 'Odds': fighterOdds[i].textContent, 'Outcome' : outcome[i].toLowerCase().replace(/(\r\n|\n|\r)/gm, "").trim()};
             obj2['Blue'] = {'Name': givenNames[i+1].textContent + ' ' +lastNames[i+1].textContent, 'Odds': fighterOdds[i+1].textContent, 'Outcome': outcome[i+1].toLowerCase().replace(/(\r\n|\n|\r)/gm, "").trim()};
 
@@ -95,11 +100,15 @@ async function scrapeAllUpcomingEvents(url) {
             for (let res of outcomeList){
                 outcome.push(res.childNodes[1].textContent)
             }
-
+            let method = document.getElementsByClassName('c-listing-fight__result-text method');
+            let time = document.getElementsByClassName('c-listing-fight__result-text time');
+            let round = document.getElementsByClassName('c-listing-fight__result-text round');
+            
             //Loop through all fights and create an array with objects including their names and odds
             for(let i = 0; i < givenNames.length-1; i+=2){
                 fightTitle = lastNames[i].textContent + ' vs ' + lastNames[i+1].textContent
                 let obj2 = {};
+                obj2['OutcomeInfo'] = {'method': method[i/2].textContent, 'time': time[i/2].textContent,'round': round[i/2].textContent};
                 obj2['Red'] =  {'Name': givenNames[i].textContent + ' ' +lastNames[i].textContent, 'Odds': fighterOdds[i].textContent, 'Outcome' : outcome[i].toLowerCase().replace(/(\r\n|\n|\r)/gm, "").trim()};
                 obj2['Blue'] = {'Name': givenNames[i+1].textContent + ' ' +lastNames[i+1].textContent, 'Odds': fighterOdds[i+1].textContent, 'Outcome': outcome[i+1].toLowerCase().replace(/(\r\n|\n|\r)/gm, "").trim()};
 
