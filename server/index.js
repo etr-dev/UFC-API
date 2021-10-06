@@ -18,6 +18,7 @@ app.use(function(req, res, next){
     next();
 });
 
+//returns json object from next upcoming UFC Event
 app.get('/api/v1/nextEvent', async (req, res) => {
     console.log(colors.green('[' + new Date().toLocaleString() + ']    ' )+ 'API request at: /nextEvent')
     if (cache.has('nextEvent')){
@@ -39,6 +40,7 @@ app.get('/api/v1/nextEvent', async (req, res) => {
     }
 });
 
+//returns links to all upcoming ufc fights
 app.get('/api/v1/eventLinks', async (req, res) => {
     console.log(colors.green('[' + new Date().toLocaleString() + ']    ' )+'API request at: /eventLinks')
     if (cache.has('eventLinks')){
@@ -61,6 +63,7 @@ app.get('/api/v1/eventLinks', async (req, res) => {
     }
 });
 
+//returns all upcoming UFC events as json
 app.get('/api/v1/allEvents', async (req, res) => { //SLOW
     //const eventLinks = await scrapers.scrapeEventUrls(req)
     console.log(colors.green('[' + new Date().toLocaleString() + ']    ' )+'API request at: /allEvents')
@@ -83,8 +86,9 @@ app.get('/api/v1/allEvents', async (req, res) => { //SLOW
     }
 });
 
-app.get('/api/v1/eventByLink', async (req, res) => { //SLOW
-    //const eventLinks = await scrapers.scrapeEventUrls(req)
+
+//returns UFC object based on url parameter
+app.get('/api/v1/eventByLink', async (req, res) => {
     console.log(colors.green('[' + new Date().toLocaleString() + ']    ' )+'API request at: eventByLink')
     try{
         req.query.url;
@@ -119,12 +123,10 @@ app.get('/api/v1/eventByLink', async (req, res) => { //SLOW
     //todo: get ufc odds
 });
 
-app.post('/api/v1/fight', async (req, res) => {
-    console.log(req.body)
-    //const fightData = await scrapers.scrapePage('https://sportsbook.draftkings.com/leagues/mma/88670562?category=fight-lines&subcategory=moneyline')
-    //console.log({fightData})
-    //todo: scrape
-    //todo: Add to DB
+
+//Returns a list of all public endpoints
+app.get('/api/v1/endpoints', async (req, res) => {
+    res.send({'Endpoints' : ['/api/v1/eventByLink','/api/v1/allEvents','/api/v1/eventLinks','/api/v1/nextEvent']})
 });
 
 app.listen(port, () => {
