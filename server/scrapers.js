@@ -6,11 +6,10 @@ async function scrapeNextEvent(url) {
     const page = await browser.newPage();
     await page.goto(url)
 
-
     //Get each event element and store the link to the event pages in eventLinks array
     let eventLinks = await page.evaluate(async () => {
-        let data = [];
-        let events = document.getElementsByClassName('c-card-event--result__headline')
+        let data = [];      
+        let events = document.querySelectorAll("[class*=result__headline]")
         for (var event of events)
             data.push(event.childNodes[0].href);
         
@@ -23,6 +22,8 @@ async function scrapeNextEvent(url) {
     await page.goto(eventLinks[0])
     let fightInfo = await page.evaluate(async () => {
         let data = [];
+
+        //('c-listing-fight__banner--live hidden') if the fight isn't live ('c-listing-fight__banner--live') if it is live
 
         //Store a list of all fighters first and last names
         let givenNames = document.getElementsByClassName('c-listing-fight__corner-given-name');
@@ -41,7 +42,7 @@ async function scrapeNextEvent(url) {
         for(let i = 0; i < givenNames.length-1; i+=2){
             fightTitle = lastNames[i].textContent + ' vs ' + lastNames[i+1].textContent
             let obj2 = {};
-            obj2['OutcomeInfo'] = {'method': method[i/2].textContent, 'time': time[i/2].textContent,'round': round[i/2].textContent};
+            obj2['OutcomeInfo'] = {'method': method[i].textContent, 'time': time[i].textContent,'round': round[i].textContent};
             obj2['Red'] =  {'Name': givenNames[i].textContent + ' ' +lastNames[i].textContent, 'Odds': fighterOdds[i].textContent, 'Outcome' : outcome[i].toLowerCase().replace(/(\r\n|\n|\r)/gm, "").trim()};
             obj2['Blue'] = {'Name': givenNames[i+1].textContent + ' ' +lastNames[i+1].textContent, 'Odds': fighterOdds[i+1].textContent, 'Outcome': outcome[i+1].toLowerCase().replace(/(\r\n|\n|\r)/gm, "").trim()};
 
@@ -50,10 +51,18 @@ async function scrapeNextEvent(url) {
             data.push(fightData);  
         }
 
+        //CREATING THE OBJECT THAT GETS RETURNED
         let obj = {};
-        obj['eventTitle'] = window.location.pathname.split('/').pop();
+
+        //Get URL and clean it up into a title
+        obj['eventTitle'] = window.location.pathname.split('/').pop().replaceAll('-',' ').toLowerCase().split(' ').map((s) => s.charAt(0).toUpperCase() + s.substring(1)).join(' ').replace('Ufc','UFC');
+        obj['url'] = window.location.href
         obj['date'] = document.getElementsByClassName('c-event-fight-card-broadcaster__time tz-change-inner')[0].textContent;
-        //obj['name'] = document.getElementsByClassName('field field--name-venue field--type-entity-reference field--label-hidden field__item')[0].textContent;
+        try{
+        obj['image'] = document.getElementsByClassName('c-hero__image')[1].getAttribute('src')
+        } catch(err) {
+            obj['image'] = 'https://wallpaperaccess.com/full/2241952.jpg'
+        }
         obj['fights'] = data;
         return obj;
     });
@@ -117,19 +126,20 @@ async function scrapeAllUpcomingEvents(url) {
                 data.push(fightData);  
             }
 
+            //CREATING THE OBJECT THAT GETS RETURNED
             let obj = {};
 
-
-            /*
-            *
-            *   THERE NEEDS TO BE A TRY CATCH UNDER THIS
-            *   I have commented out the location scraper because if the event is too far in the future it will cause an issue when location isn't determined
-            */
-
-            obj['eventTitle'] = window.location.pathname.split('/').pop();
-            obj['date'] = document.getElementsByClassName('c-hero__headline-suffix tz-change-inner')[0].textContent;
-            //obj['location'] = document.getElementsByClassName('field field--name-venue field--type-entity-reference field--label-hidden field__item')[0].textContent;
+            //Get URL and clean it up into a title
+            obj['eventTitle'] = window.location.pathname.split('/').pop().replaceAll('-',' ').toLowerCase().split(' ').map((s) => s.charAt(0).toUpperCase() + s.substring(1)).join(' ').replace('Ufc','UFC');
+            obj['url'] = window.location.href
+            obj['date'] = document.getElementsByClassName('c-event-fight-card-broadcaster__time tz-change-inner')[0].textContent;
+            try{
+            obj['image'] = document.getElementsByClassName('c-hero__image')[1].getAttribute('src')
+            } catch(err) {
+                obj['image'] = 'https://wallpaperaccess.com/full/2241952.jpg'
+            }
             obj['fights'] = data;
+            
             return [obj,window.location.href];
         });
         //URL: FightInfo ............. you can search for the event by url in the api
@@ -196,10 +206,18 @@ async function scrapeByUrl(url) {
             data.push(fightData);  
         }
 
+        //CREATING THE OBJECT THAT GETS RETURNED
         let obj = {};
-        obj['eventTitle'] = window.location.pathname.split('/').pop();
+
+        //Get URL and clean it up into a title
+        obj['eventTitle'] = window.location.pathname.split('/').pop().replaceAll('-',' ').toLowerCase().split(' ').map((s) => s.charAt(0).toUpperCase() + s.substring(1)).join(' ').replace('Ufc','UFC');
+        obj['url'] = window.location.href
         obj['date'] = document.getElementsByClassName('c-event-fight-card-broadcaster__time tz-change-inner')[0].textContent;
-        //obj['name'] = document.getElementsByClassName('field field--name-venue field--type-entity-reference field--label-hidden field__item')[0].textContent;
+        try{
+        obj['image'] = document.getElementsByClassName('c-hero__image')[1].getAttribute('src')
+        } catch(err) {
+            obj['image'] = 'https://wallpaperaccess.com/full/2241952.jpg'
+        }
         obj['fights'] = data;
         return obj;
     });

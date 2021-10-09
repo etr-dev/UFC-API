@@ -7,6 +7,7 @@ const app = express();
 const scrapers = require("./scrapers");
 const e = require('express');
 const port = 3000;
+const url = 'https://www.ufc.com/events'
 
 
 //elijah
@@ -27,7 +28,7 @@ app.get('/api/v1/nextEvent', async (req, res) => {
     } else {
     try{
         console.log(colors.green('[' + new Date().toLocaleString() + ']    ' )+ 'Scraping...')
-        const fightData = await scrapers.scrapeNextEvent('https://www.ufc.com/events')
+        const fightData = await scrapers.scrapeNextEvent(url)
         cache.set('nextEvent', fightData)
         res.send(fightData)
     }
@@ -49,7 +50,7 @@ app.get('/api/v1/eventLinks', async (req, res) => {
     } else {
         console.log(colors.green('[' + new Date().toLocaleString() + ']    ' )+'Scraping...')
         try{
-            const eventLinks = await scrapers.scrapeEventUrls('https://www.ufc.com/events')
+            const eventLinks = await scrapers.scrapeEventUrls(url)
             cache.set("eventLinks",eventLinks)
             res.send(eventLinks)
         }
@@ -74,7 +75,7 @@ app.get('/api/v1/allEvents', async (req, res) => { //SLOW
     } else {
         console.log(colors.green('[' + new Date().toLocaleString() + ']    ' )+'Scraping...')
         try{
-            const allEvents = await scrapers.scrapeAllUpcomingEvents('https://www.ufc.com/events')
+            const allEvents = await scrapers.scrapeAllUpcomingEvents(url)
             cache.set("allEvents",allEvents)
             res.send(allEvents)
         }
@@ -104,7 +105,7 @@ app.get('/api/v1/eventByLink', async (req, res) => {
     } else {
         console.log(colors.green('[' + new Date().toLocaleString() + ']    ' )+'Scraping...')
         try{
-            if(req.query.url.toLowerCase().indexOf('https://www.ufc.com/event/') == -1) 
+            if(req.query.url.toLowerCase().indexOf(url) == -1) 
             {
                 console.error(colors.red('[' + new Date().toLocaleString() + ']    ' )+'EventLink was not a ufc link')
                 throw 'not ufc link';
