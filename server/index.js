@@ -8,6 +8,7 @@ const scrapers = require("./scrapers");
 const e = require('express');
 const port = 3000;
 const url = 'https://www.ufc.com/events'
+const urlVerification = 'https://www.ufc.com/event'
 
 
 //elijah
@@ -97,6 +98,7 @@ app.get('/api/v1/eventByLink', async (req, res) => {
     catch(err) {
         console.error(colors.red('[' + new Date().toLocaleString() + ']    ' )+'EventByLink had no url field in query')
         res.send({'Error' : 'Format your query like this `/eventByLink?url=https://www.ufc.com/event/ufc-268` you are recieving an error for no url query'})
+        return
     }
 
     if(cache.has(req.query.url.toLowerCase())){
@@ -105,10 +107,11 @@ app.get('/api/v1/eventByLink', async (req, res) => {
     } else {
         console.log(colors.green('[' + new Date().toLocaleString() + ']    ' )+'Scraping...')
         try{
-            if(req.query.url.toLowerCase().indexOf(url) == -1) 
+            if(req.query.url.toLowerCase().indexOf(urlVerification) == -1) 
             {
                 console.error(colors.red('[' + new Date().toLocaleString() + ']    ' )+'EventLink was not a ufc link')
                 throw 'not ufc link';
+                return
             }
 
             const event = await scrapers.scrapeByUrl(req.query.url)
@@ -119,7 +122,37 @@ app.get('/api/v1/eventByLink', async (req, res) => {
         catch(err){
             console.error(colors.red('[' + new Date().toLocaleString() + ']    ' )+err)
             res.send({'Error' : 'Your specified url is not contained. Try using the /eventLinks feature to see available events'})
+            return
         }
+    }
+    //todo: get ufc odds
+});
+
+app.get('/api/v1/liveEventStatus', async (req, res) => {
+    console.log(colors.green('[' + new Date().toLocaleString() + ']    ' )+'API request at: liveEventStatus')
+    try{
+        req.query.url;
+    }  
+    catch(err) {
+        console.error(colors.red('[' + new Date().toLocaleString() + ']    ' )+'liveEventStatus had no url field in query')
+        res.send({'Error' : 'Format your query like this `/liveEventStatus?url=https://www.ufc.com/event/ufc-268` you are recieving an error for no url query'})
+    }
+    console.log(colors.green('[' + new Date().toLocaleString() + ']    ' )+'Scraping...')
+    try{
+        if(req.query.url.toLowerCase().indexOf(urlVerification) == -1) 
+        {
+            console.error(colors.red('[' + new Date().toLocaleString() + ']    ' )+'EventLink was not a ufc link')
+            return
+        }
+
+        const event = await scrapers.scrapeLiveEvent(req.query.url)
+        res.send(event)
+        console.log(colors.green('[' + new Date().toLocaleString() + ']    ' )+'Success')
+    }
+    catch(err){
+        console.error(colors.red('[' + new Date().toLocaleString() + ']    ' )+err)
+        res.send({'Error' : 'Your specified url is not contained. Try using the /eventLinks feature to see available events'})
+        return
     }
     //todo: get ufc odds
 });

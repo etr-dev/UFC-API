@@ -21,7 +21,7 @@ async function scrapeNextEvent(url) {
     //Navigate to next event page
     await page.goto(eventLinks[0])
     let fightInfo = await page.evaluate(async () => {
-        let data = [];
+        let data = {};
 
         //('c-listing-fight__banner--live hidden') if the fight isn't live ('c-listing-fight__banner--live') if it is live
 
@@ -47,8 +47,8 @@ async function scrapeNextEvent(url) {
             obj2['Blue'] = {'Name': givenNames[i+1].textContent + ' ' +lastNames[i+1].textContent, 'Odds': fighterOdds[i+1].textContent, 'Outcome': outcome[i+1].toLowerCase().replace(/(\r\n|\n|\r)/gm, "").trim()};
 
             let fightData = {}
-            fightData[fightTitle] = obj2
-            data.push(fightData);  
+            data[fightTitle] = obj2
+            //data.push(fightData);  
         }
 
         //CREATING THE OBJECT THAT GETS RETURNED
@@ -226,8 +226,29 @@ async function scrapeByUrl(url) {
     return fightInfo    //Return JSON object with event info and all fights on the event
 }
 
+async function scrapeLiveEvent(url) {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.goto(url)
+
+    let liveInfo = await page.evaluate(async () => {
+        let liveFights = document.getElementsByClassName('c-listing-fight__banner--live')
+        let lastNames = document.getElementsByClassName('c-listing-fight__corner-family-name');
+        let data = {}
+        
+        for(let i = 0; i < lastNames.length; i+=2){
+            if (liveFights[i/2].className == "c-listing-fight__banner--live")
+                data[lastNames[i].textContent + ' vs ' + lastNames[i+1].textContent] = true
+            else
+                data[lastNames[i].textContent + ' vs ' + lastNames[i+1].textContent] = false
+        }
+        return data
+    });
+    return liveInfo
+}
+
 (async () => {
-    //const data = await scrapeByUrl('https://www.ufc.com/event/ufc-fight-night-october-09-2021')
+    //const data = await scrapeLiveEvent('https://www.ufc.com/event/ufc-fight-night-october-09-2021')
     //console.log(data)
 })();
 
@@ -235,5 +256,6 @@ module.exports = {
     scrapeNextEvent,
     scrapeEventUrls,
     scrapeAllUpcomingEvents,
-    scrapeByUrl
+    scrapeByUrl,
+    scrapeLiveEvent
 }
