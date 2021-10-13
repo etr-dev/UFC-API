@@ -177,7 +177,7 @@ async function scrapeByUrl(url) {
     await page.goto(url)
 
     let fightInfo = await page.evaluate(async () => {
-        let data = [];
+        let data = {};
 
         //Store a list of all fighters first and last names
         let givenNames = document.getElementsByClassName('c-listing-fight__corner-given-name');
@@ -202,8 +202,7 @@ async function scrapeByUrl(url) {
             obj2['Blue'] = {'Name': givenNames[i+1].textContent + ' ' +lastNames[i+1].textContent, 'Odds': fighterOdds[i+1].textContent, 'Outcome': outcome[i+1].toLowerCase().replace(/(\r\n|\n|\r)/gm, "").trim()};
 
             let fightData = {}
-            fightData[fightTitle] = obj2
-            data.push(fightData);  
+            data[fightTitle] = obj2
         }
 
         //CREATING THE OBJECT THAT GETS RETURNED
