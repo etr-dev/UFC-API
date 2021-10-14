@@ -36,7 +36,7 @@
   <h3 align="center">UFC Webscraping API</h3>
 
   <p align="center">
-    An opensource webscraper that retrieves and sends data about upcoming UFC Events!
+    A webscraper that retrieves and sends data about upcoming UFC Events through a REST api!
     <br />
     <a href="https://github.com/erobin27/UFC-API"><strong>Explore the docs »</strong></a>
     <br />
