@@ -85,9 +85,7 @@ Why is this project important:
 * Plans to maybe host the API through my own server eventually
 * This is 100% free and can be ran on local machines at no cost :smile:
 
-Of course, no one template will serve all projects since your needs may be different. So I'll be adding more in the near future. You may also suggest changes by forking this repo and creating a pull request or opening an issue. Thanks to all the people have contributed to expanding this template!
-
-Use the `BLANK_README.md` to get started.
+This is part of the backend for my Discord sports betting bot. You can view my repo `BetBot` to look more into that.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
