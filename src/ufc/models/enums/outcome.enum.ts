@@ -1,8 +1,8 @@
-enum Outcomes {
+export enum Outcomes {
     WIN = 'WIN',
     LOSS = 'LOSS',
     NO_CONTEST = 'NO CONTEST',
-    DRAW = 'DRAW'
+    DRAW = 'DRAW',
+    NOTHING = '',
+    NOT_FOUND = 'NOT FOUND'
 }
-
-export default Outcomes;

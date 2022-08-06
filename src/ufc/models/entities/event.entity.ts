@@ -7,5 +7,5 @@ export class UfcEvent {
 
     image: string;
     
-    fights: [value: unknown];
+    fights: object;
 }

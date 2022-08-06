@@ -1,14 +1,27 @@
 import { match } from 'assert';
 import { assert } from 'console';
 import { UfcEvent } from 'src/ufc/models/entities/event.entity';
+import { Outcomes } from 'src/ufc/models/enums/outcome.enum';
+import { UfcFighterInfo } from 'src/ufc/models/interfaces/fighterInfor.interface';
 import { UfcMatchDetails } from 'src/ufc/models/interfaces/matchDetails.interface';
+import { UfcMatchInfo } from 'src/ufc/models/interfaces/matchInfo.interface';
 
 const puppeteer = require('puppeteer');
+let browser, page;
+
+async function startBrowser() {
+  var current = new Date();
+  console.log('browser starting: ' + current.getSeconds());
+  browser = await puppeteer.launch();
+  page = await browser.newPage(); 
+}
 
 async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
   //Launch Puppeteer and navigate to URL
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
+  var current = new Date();
+  console.log('begin method: ' + current.getSeconds());
+
+  var current = new Date();
   await page.goto(url);
 
   if (nextEvent) {
@@ -24,7 +37,9 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
     await page.goto(eventLinks[0]);
   }
 
-  let fightInfo: UfcEvent = await page.evaluate(async () => {
+  var current = new Date();
+  console.log('begin scraping: ' + current.getSeconds());
+  let ufcEvent: UfcEvent = await page.evaluate(async (): Promise<UfcEvent> => {
     function getSingleElementByClassName(
       htmlElement: Element,
       className: string,
@@ -42,8 +57,15 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
       return elements.length > 0 ? elements[0].textContent : replacementText;
     }
 
-    function getMatchDetails(match: Element) {
-        let DetailsObj = {};
+    function getMatchDetails(match: Element): UfcMatchDetails {
+      let DetailsObj: UfcMatchDetails = {
+        Link: 'NOT FOUND',
+        isLive: false,
+        Method: 'NOT FOUND',
+        Time: 'NOT FOUND',
+        Round: 0,
+      };
+
       const detailsElement = getSingleElementByClassName(
         match,
         'c-listing-fight__details',
@@ -53,11 +75,10 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
         match,
         'c-listing-fight',
       ).attributes[1];
-      matchLinkNode.name === 'data-fmid'
-        ? (DetailsObj[
-            'Link'
-          ] = `${matchLinkNode.baseURI}#${matchLinkNode.value}`)
-        : (DetailsObj['Link'] = '');
+
+      if (matchLinkNode.name === 'data-fmid') {
+        DetailsObj.Link = `${matchLinkNode.baseURI}#${matchLinkNode.value}`;
+      }
 
       // return empty because if details can't be found something is wrong
       if (!detailsElement) return DetailsObj;
@@ -66,23 +87,21 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
         detailsElement,
         'c-listing-fight__banner--live',
       );
-      DetailsObj['isLive'] = !(
-        window.getComputedStyle(isLive).display === 'none'
-      );
+      DetailsObj.isLive = !(window.getComputedStyle(isLive).display === 'none');
 
-      DetailsObj['Method'] = getSingleElementTextContent(
+      DetailsObj.Method = getSingleElementTextContent(
         detailsElement,
         'c-listing-fight__result-text method',
         'NOT FOUND',
       );
 
-      DetailsObj['Time'] = getSingleElementTextContent(
+      DetailsObj.Time = getSingleElementTextContent(
         detailsElement,
         'c-listing-fight__result-text time',
         'NOT FOUND',
       );
 
-      DetailsObj['Round'] = Number(
+      DetailsObj.Round = Number(
         getSingleElementTextContent(
           detailsElement,
           'c-listing-fight__result-text round',
@@ -93,11 +112,14 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
       return DetailsObj;
     }
 
-    function getFighterAttributes(fighter: Element, odds: string) {
-      let fighterObject = {
+    function getFighterAttributes(
+      fighter: Element,
+      odds: string,
+    ): UfcFighterInfo {
+      let fighterObject: UfcFighterInfo = {
         Name: '',
         Odds: '',
-        Outcome: '',
+        Outcome: 'NOT FOUND' as Outcomes,
       };
 
       //Setup fighter's name
@@ -112,9 +134,8 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
         'null',
       );
 
-      fighterObject['Name'] = `${firstName} ${lastName}`;
-
-      fighterObject['Odds'] = odds;
+      fighterObject.Name = `${firstName} ${lastName}`;
+      fighterObject.Odds = odds;
 
       const outcomeWrapper = getSingleElementByClassName(
         fighter,
@@ -122,14 +143,15 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
       );
       const outcome = outcomeWrapper
         ? outcomeWrapper.children[0].textContent
-            .toLowerCase()
+            .toUpperCase()
             .replace(/(\r\n|\n|\r)/gm, '')
             .trim()
         : '';
-      fighterObject['Outcome'] = outcome;
+      fighterObject.Outcome = outcome as Outcomes;
 
       return fighterObject;
     }
+
     let data = {};
 
     //('c-listing-fight__banner--live hidden') if the fight isn't live ('c-listing-fight__banner--live') if it is live
@@ -160,22 +182,26 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
       const redOdds = oddsElementList[0].textContent;
       const blueOdds = oddsElementList[1].textContent;
 
-      data[
-        `${redName ? redName.textContent : 'null'} vs ${
-          blueName ? blueName.textContent : 'null'
-        }`
-      ] = {
+      const matchInfo: UfcMatchInfo = {
         Details: getMatchDetails(match),
         Red: getFighterAttributes(redCorner, redOdds),
         Blue: getFighterAttributes(blueCorner, blueOdds),
       };
+
+      data[`${matchInfo.Red.Name} vs ${matchInfo.Blue.Name}`] = matchInfo;
     }
 
     //CREATING THE OBJECT THAT GETS RETURNED
-    let obj = {};
+    let ufcEvent: UfcEvent = {
+      eventTitle: '',
+      url: '',
+      date: '',
+      image: '',
+      fights: data,
+    };
 
     //Get URL and clean it up into a title
-    obj['eventTitle'] = window.location.pathname
+    ufcEvent.eventTitle = window.location.pathname
       .split('/')
       .pop()
       .replaceAll('-', ' ')
@@ -184,23 +210,22 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
       .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
       .join(' ')
       .replace('Ufc', 'UFC');
-    obj['url'] = window.location.href;
-    obj['date'] = document.getElementsByClassName(
+    ufcEvent.url = window.location.href;
+    ufcEvent.date = document.getElementsByClassName(
       'c-event-fight-card-broadcaster__time tz-change-inner',
     )[0].textContent;
     try {
       const imageLink =
         document.getElementsByTagName('SOURCE')[0].attributes[0].value;
-      obj['image'] = imageLink.substring(0, imageLink.indexOf(' '));
+      ufcEvent.image = imageLink.substring(0, imageLink.indexOf(' '));
     } catch (err) {
-      obj['image'] = 'https://wallpaperaccess.com/full/2241952.jpg';
+      ufcEvent.image = 'https://wallpaperaccess.com/full/2241952.jpg';
     }
-    obj['fights'] = data;
-    return obj;
+    return ufcEvent;
   });
-
-  browser.close();
-  return fightInfo; //Return JSON object with event info and all fights on the event
+  var current = new Date();
+  console.log('end scraping ' + current.getSeconds());
+  return ufcEvent; //Return JSON object with event info and all fights on the event
 }
 
-export { scrapeUfcPage };
+export { scrapeUfcPage, startBrowser };

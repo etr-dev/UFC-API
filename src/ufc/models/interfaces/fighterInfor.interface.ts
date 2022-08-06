@@ -1,4 +1,4 @@
-import Outcomes from "../enums/outcome.enum";
+import { Outcomes } from "../enums/outcome.enum";
 
 export interface UfcFighterInfo {
     Name: string;
