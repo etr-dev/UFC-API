@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { logServer } from 'src/utils/log';
 import { AppService } from './app.service';
 
 @Controller()
@@ -7,6 +8,7 @@ export class AppController {
 
   @Get('/health')
   health(): string {
+    logServer('Health Endpoint Hit')
     return this.appService.health();
   }
 }

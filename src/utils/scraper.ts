@@ -5,13 +5,12 @@ import { Outcomes } from 'src/ufc/models/enums/outcome.enum';
 import { UfcFighterInfo } from 'src/ufc/models/interfaces/fighterInfor.interface';
 import { UfcMatchDetails } from 'src/ufc/models/interfaces/matchDetails.interface';
 import { UfcMatchInfo } from 'src/ufc/models/interfaces/matchInfo.interface';
+import { logError, logServer } from './log';
 
 const puppeteer = require('puppeteer');
 let browser, page;
 
 async function startBrowser() {
-  var current = new Date();
-  console.log('browser starting: ' + current.getSeconds());
   browser = await puppeteer.launch();
   page = await browser.newPage(); 
 }
@@ -19,9 +18,8 @@ async function startBrowser() {
 async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
   //Launch Puppeteer and navigate to URL
   var current = new Date();
-  console.log('begin method: ' + current.getSeconds());
+  const startTime = current.getSeconds();
 
-  var current = new Date();
   await page.goto(url);
 
   if (nextEvent) {
@@ -37,8 +35,6 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
     await page.goto(eventLinks[0]);
   }
 
-  var current = new Date();
-  console.log('begin scraping: ' + current.getSeconds());
   let ufcEvent: UfcEvent = await page.evaluate(async (): Promise<UfcEvent> => {
     function getSingleElementByClassName(
       htmlElement: Element,
@@ -223,8 +219,9 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
     }
     return ufcEvent;
   });
+  
   var current = new Date();
-  console.log('end scraping ' + current.getSeconds());
+  logServer(`Page Scraped in ${current.getSeconds() - startTime} seconds.`, 'clock1');
   return ufcEvent; //Return JSON object with event info and all fights on the event
 }
 
