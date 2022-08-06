@@ -7,8 +7,6 @@ import {
   CacheInterceptor,
   UseInterceptors,
   createParamDecorator,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { UfcService } from './ufc.service';
 import { logServer } from 'src/utils/log';
