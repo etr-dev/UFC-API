@@ -15,7 +15,7 @@ async function startBrowser() {
   page = await browser.newPage(); 
 }
 
-async function scrapeAllEvents(url: string) {
+async function getAllEventLinks(url: string) {
   await page.goto(url);
     //Get each event element and store the link to the event pages in eventLinks array
     let eventLinks = await page.evaluate(async () => {
@@ -26,12 +26,7 @@ async function scrapeAllEvents(url: string) {
       return data;
     });
   
-  let data = [];
-  for (let eventLink of eventLinks) {
-    data.push(await scrapeUfcPage(eventLink));
-  }
-
-  return data;
+  return eventLinks;
 }
 
 async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
@@ -243,4 +238,4 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
   return ufcEvent; //Return JSON object with event info and all fights on the event
 }
 
-export { scrapeUfcPage, startBrowser, scrapeAllEvents };
+export { scrapeUfcPage, startBrowser, getAllEventLinks };

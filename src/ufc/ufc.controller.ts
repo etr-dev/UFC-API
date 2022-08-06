@@ -35,4 +35,10 @@ export class UfcController {
     logServer('allEvents endpoint hit');
     return this.ufcService.allEvents();
   }
+
+  @Get('allEventLinks')
+  allEventLinks() {
+    logServer('allEvents endpoint hit');
+    return this.ufcService.allEventLinks();
+  }
 }
