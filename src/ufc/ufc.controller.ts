@@ -1,22 +1,25 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
   Query,
   CacheKey,
   CacheTTL,
   CacheInterceptor,
   UseInterceptors,
+  createParamDecorator,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { UfcService } from './ufc.service';
-import { CreateUfcDto } from './dto/create-ufc.dto';
-import { UpdateUfcDto } from './dto/update-ufc.dto';
 import { logServer } from 'src/utils/log';
 import { GetUfcEventResponse, GetUfcEventsResponse, GetUfcLinksResponse } from './models/responses/eventResponse.response';
+import { EventByLinkDto } from './dto/eventByLink.dto';
+
+const URL = createParamDecorator((data, req) => {
+  const result = new EventByLinkDto();
+  result.url = req.query.url;
+  return result;
+});
 
 @Controller('ufc')
 @UseInterceptors(CacheInterceptor)
@@ -31,10 +34,9 @@ export class UfcController {
   }
 
   @Get('eventByUrl')
-  eventByUrl(@Query() query): Promise<GetUfcEventResponse> {
-    const url: string = query.url;
+  eventByUrl(@Query() query: EventByLinkDto): Promise<GetUfcEventResponse> {
     logServer('Event by URL endpoint hit');
-    return this.ufcService.eventByUrl(url);
+    return this.ufcService.eventByUrl(query.url);
   }
 
   @CacheKey('allEvents')
