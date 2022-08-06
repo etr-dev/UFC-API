@@ -15,13 +15,31 @@ async function startBrowser() {
   page = await browser.newPage(); 
 }
 
+async function scrapeAllEvents(url: string) {
+  await page.goto(url);
+    //Get each event element and store the link to the event pages in eventLinks array
+    let eventLinks = await page.evaluate(async () => {
+      let data = [];
+      let events = document.querySelectorAll('[class*=result__headline]');
+      for (var event of events) data.push(event.childNodes[0]['href']);
+
+      return data;
+    });
+  
+  let data = [];
+  for (let eventLink of eventLinks) {
+    data.push(await scrapeUfcPage(eventLink));
+  }
+
+  return data;
+}
+
 async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
   //Launch Puppeteer and navigate to URL
   var current = new Date();
   const startTime = current.getSeconds();
 
   await page.goto(url);
-
   if (nextEvent) {
     //Get each event element and store the link to the event pages in eventLinks array
     let eventLinks = await page.evaluate(async () => {
@@ -225,4 +243,4 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
   return ufcEvent; //Return JSON object with event info and all fights on the event
 }
 
-export { scrapeUfcPage, startBrowser };
+export { scrapeUfcPage, startBrowser, scrapeAllEvents };
