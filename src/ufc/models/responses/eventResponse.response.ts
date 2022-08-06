@@ -16,6 +16,12 @@ export class GetUfcEventsSuccessResponse extends PickType(BaseUfcEventResponse, 
   ] as const) {
     data: UfcEvent[];
 }
+
+export class GetUfcLinksSuccessResponse extends PickType(BaseUfcEventResponse, [
+  'message',
+] as const) {
+  data: string[];
+}
   
 export class GetUfcEventErrorResponse extends PickType(BaseUfcEventResponse, [
   'message',
@@ -23,3 +29,4 @@ export class GetUfcEventErrorResponse extends PickType(BaseUfcEventResponse, [
 
 export type GetUfcEventResponse = GetUfcEventSuccessResponse | GetUfcEventErrorResponse
 export type GetUfcEventsResponse = GetUfcEventsSuccessResponse | GetUfcEventErrorResponse
+export type GetUfcLinksResponse = GetUfcLinksSuccessResponse | GetUfcEventErrorResponse

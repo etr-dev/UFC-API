@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { SUCCESS_MESSAGE } from 'src/utils/constants';
 import { getAllEventLinks, scrapeUfcPage } from 'src/utils/scraper';
 import { UfcEvent } from './models/entities/event.entity';
-import { GetUfcEventResponse, GetUfcEventsResponse } from './models/responses/eventResponse.response';
+import { GetUfcEventResponse, GetUfcEventsResponse, GetUfcLinksResponse } from './models/responses/eventResponse.response';
 
 @Injectable()
 export class UfcService {
@@ -27,7 +27,7 @@ export class UfcService {
     return {message: SUCCESS_MESSAGE, data: scraped}
   }
 
-  async allEventLinks() {
+  async allEventLinks(): Promise<GetUfcLinksResponse> {
     const eventLinks: string[] = await getAllEventLinks('https://www.ufc.com/tickets')
     return {message: SUCCESS_MESSAGE, data: eventLinks}
   }

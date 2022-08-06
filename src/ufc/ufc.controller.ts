@@ -12,7 +12,7 @@ import { UfcService } from './ufc.service';
 import { CreateUfcDto } from './dto/create-ufc.dto';
 import { UpdateUfcDto } from './dto/update-ufc.dto';
 import { logServer } from 'src/utils/log';
-import { GetUfcEventResponse, GetUfcEventsResponse } from './models/responses/eventResponse.response';
+import { GetUfcEventResponse, GetUfcEventsResponse, GetUfcLinksResponse } from './models/responses/eventResponse.response';
 
 @Controller('ufc')
 export class UfcController {
@@ -37,7 +37,7 @@ export class UfcController {
   }
 
   @Get('allEventLinks')
-  allEventLinks() {
+  allEventLinks(): Promise<GetUfcLinksResponse>  {
     logServer('allEvents endpoint hit');
     return this.ufcService.allEventLinks();
   }
