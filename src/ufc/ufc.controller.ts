@@ -7,11 +7,13 @@ import {
   CacheInterceptor,
   UseInterceptors,
   createParamDecorator,
+  UseGuards,
 } from '@nestjs/common';
 import { UfcService } from './ufc.service';
 import { logServer } from 'src/utils/log';
 import { GetUfcEventResponse, GetUfcEventsResponse, GetUfcLinksResponse } from './models/responses/eventResponse.response';
 import { EventByLinkDto } from './dto/eventByLink.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 const URL = createParamDecorator((data, req) => {
   const result = new EventByLinkDto();
@@ -19,7 +21,9 @@ const URL = createParamDecorator((data, req) => {
   return result;
 });
 
+
 @Controller('ufc')
+@UseGuards(AuthGuard('api-key'))
 @UseInterceptors(CacheInterceptor)
 export class UfcController {
   constructor(private readonly ufcService: UfcService) { }
