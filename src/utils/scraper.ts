@@ -11,21 +11,23 @@ const puppeteer = require('puppeteer');
 let browser, page;
 
 async function startBrowser() {
-  browser = await puppeteer.launch();
-  page = await browser.newPage(); 
+  browser = await puppeteer.launch({
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
+  page = await browser.newPage();
 }
 
 async function getAllEventLinks(url: string) {
   await page.goto(url);
-    //Get each event element and store the link to the event pages in eventLinks array
-    let eventLinks = await page.evaluate(async () => {
-      let data = [];
-      let events = document.querySelectorAll('[class*=result__headline]');
-      for (var event of events) data.push(event.childNodes[0]['href']);
+  //Get each event element and store the link to the event pages in eventLinks array
+  let eventLinks = await page.evaluate(async () => {
+    let data = [];
+    let events = document.querySelectorAll('[class*=result__headline]');
+    for (var event of events) data.push(event.childNodes[0]['href']);
 
-      return data;
-    });
-  
+    return data;
+  });
+
   return eventLinks;
 }
 
@@ -232,9 +234,12 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
     }
     return ufcEvent;
   });
-  
+
   var current = new Date();
-  logServer(`Page Scraped in ${current.getSeconds() - startTime} seconds.`, 'clock1');
+  logServer(
+    `Page Scraped in ${current.getSeconds() - startTime} seconds.`,
+    'clock1',
+  );
   return ufcEvent; //Return JSON object with event info and all fights on the event
 }
 
