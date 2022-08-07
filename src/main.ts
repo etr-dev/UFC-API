@@ -9,7 +9,7 @@ import { ValidationPipe } from '@nestjs/common';
 config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.APP_PORT || 8080);
+  await app.listen(process.env.PORT || 8080);
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
     validateCustomDecorators: true,
