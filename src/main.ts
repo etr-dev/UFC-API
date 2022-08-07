@@ -19,7 +19,7 @@ async function bootstrap() {
     transformOptions: {enableImplicitConversion: true},
   }))
   await startBrowser();
-  logServer(`App Started on port ${process.env.APP_PORT}`);
+  logServer(`App Started on port ${process.env.PORT}`);
   logServer(`Browser Initialized`);
 }
 bootstrap();
