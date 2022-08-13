@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { match } from 'assert';
 import { assert } from 'console';
 import { UfcEvent } from 'src/ufc/models/entities/event.entity';
@@ -10,12 +11,19 @@ import { logError, logServer } from './log';
 const puppeteer = require('puppeteer');
 let browser, page;
 
-async function startBrowser() {
+async function startBrowser(debug = false) {
   browser = await puppeteer.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
   page = await browser.newPage();
+  if (debug) {
+    page.on('console', (consoleObj) => {
+      if (consoleObj.type() === 'log') {
+        console.log(consoleObj.text());
+      }
+    });
+  }
 }
 
 async function getAllEventLinks(url: string) {
@@ -32,26 +40,14 @@ async function getAllEventLinks(url: string) {
   return eventLinks;
 }
 
-async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
+async function scrapeUfcPage(url: string) {
   //Launch Puppeteer and navigate to URL
   var current = new Date();
   const startTime = current.getSeconds();
-
   await page.goto(url);
-  if (nextEvent) {
-    //Get each event element and store the link to the event pages in eventLinks array
-    let eventLinks = await page.evaluate(async () => {
-      let data = [];
-      let events = document.querySelectorAll('[class*=result__headline]');
-      for (var event of events) data.push(event.childNodes[0]['href']);
-
-      return data;
-    });
-    //Navigate to next event page
-    await page.goto(eventLinks[0]);
-  }
 
   let ufcEvent: UfcEvent = await page.evaluate(async (): Promise<UfcEvent> => {
+    console.log('START')
     function getSingleElementByClassName(
       htmlElement: Element,
       className: string,
@@ -127,6 +123,7 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
     function getFighterAttributes(
       fighter: Element,
       odds: string,
+      side: string,
     ): UfcFighterInfo {
       let fighterObject: UfcFighterInfo = {
         Name: '',
@@ -135,31 +132,35 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
       };
 
       //Setup fighter's name
-      const firstName = getSingleElementTextContent(
-        fighter,
-        'c-listing-fight__corner-given-name',
-        'null',
-      );
-      const lastName = getSingleElementTextContent(
-        fighter,
-        'c-listing-fight__corner-family-name',
-        'null',
-      );
+      const getFighterName = (fighter, side) => {
+        const corner = getSingleElementByClassName(fighter, `c-listing-fight__corner-name c-listing-fight__corner-name--${side}`);
+        let fnameElement = getSingleElementByClassName(corner, 'c-listing-fight__corner-given-name');
+        fnameElement = fnameElement ? fnameElement : corner;
+        const firstName = fnameElement ? fnameElement.textContent.trim() : 'null';
+        
+        let lnameElement = getSingleElementByClassName(corner, 'c-listing-fight__corner-family-name');
+        lnameElement = lnameElement ? lnameElement : corner;
+        const lastName = lnameElement ? lnameElement.textContent.trim() : 'null';
+        
+        return firstName === lastName ? `${firstName}` : `${firstName} ${lastName}`
+      };
+      
+      const getFighterOutcome = (fighter) => {
+        const outcomeWrapper = getSingleElementByClassName(
+          fighter,
+          'c-listing-fight__outcome-wrapper  ',
+        );
+        const outcome = outcomeWrapper
+          ? outcomeWrapper.children[0].textContent
+              .toUpperCase()
+              .replace(/(\r\n|\n|\r)/gm, '')
+              .trim()
+          : '';
+        return outcome as Outcomes;
+      }
 
-      fighterObject.Name = `${firstName} ${lastName}`;
-      fighterObject.Odds = odds;
-
-      const outcomeWrapper = getSingleElementByClassName(
-        fighter,
-        'c-listing-fight__outcome-wrapper  ',
-      );
-      const outcome = outcomeWrapper
-        ? outcomeWrapper.children[0].textContent
-            .toUpperCase()
-            .replace(/(\r\n|\n|\r)/gm, '')
-            .trim()
-        : '';
-      fighterObject.Outcome = outcome as Outcomes;
+      fighterObject.Name = getFighterName(fighter, side);
+      fighterObject.Outcome = getFighterOutcome(fighter);
 
       return fighterObject;
     }
@@ -169,35 +170,17 @@ async function scrapeUfcPage(url: string, nextEvent: boolean = false) {
     //('c-listing-fight__banner--live hidden') if the fight isn't live ('c-listing-fight__banner--live') if it is live
     let matches = document.getElementsByClassName('l-listing__item');
     for (let match of matches) {
-      const redCorner = getSingleElementByClassName(
-        match,
-        'c-listing-fight__corner-body--red',
-      );
-      const blueCorner = getSingleElementByClassName(
-        match,
-        'c-listing-fight__corner-body--blue',
-      );
-
-      const redName = getSingleElementByClassName(
-        redCorner,
-        'c-listing-fight__corner-family-name',
-      );
-      const blueName = getSingleElementByClassName(
-        blueCorner,
-        'c-listing-fight__corner-family-name',
-      );
-
       const oddsElementList = match
-        .getElementsByClassName('c-listing-fight__odds')[0]
+        .getElementsByClassName('c-listing-fight__odds-row')[0]
         .getElementsByClassName('c-listing-fight__odds-amount');
-      //THROW ERROR IF LIST LENGTH != 2
+      if (oddsElementList.length != 2) throw new NotFoundException();
       const redOdds = oddsElementList[0].textContent;
       const blueOdds = oddsElementList[1].textContent;
-
+      
       const matchInfo: UfcMatchInfo = {
         Details: getMatchDetails(match),
-        Red: getFighterAttributes(redCorner, redOdds),
-        Blue: getFighterAttributes(blueCorner, blueOdds),
+        Red: { ...getFighterAttributes(match, redOdds, 'red'), Odds: redOdds },
+        Blue: { ...getFighterAttributes(match, redOdds, 'blue'), Odds: blueOdds },
       };
 
       data[`${matchInfo.Red.Name} vs ${matchInfo.Blue.Name}`] = matchInfo;

@@ -23,8 +23,14 @@ export class UfcService {
   }
 
   async nextEvent(): Promise<GetUfcEventResponse> {
-    const eventLinks: string[] = await getAllEventLinks('https://www.ufc.com/tickets')
-    const scraped: UfcEvent = await scrapeUfcPage(eventLinks[0]);
+    let eventLinks: string[]
+    let scraped: UfcEvent
+    try {
+      eventLinks = await getAllEventLinks('https://www.ufc.com/tickets');
+      scraped = await scrapeUfcPage(eventLinks[0]);
+    } catch (e) {
+      console.log(e);
+    }
   
     return {message: SUCCESS_MESSAGE, data: scraped}
   }
