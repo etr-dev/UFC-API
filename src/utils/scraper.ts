@@ -47,7 +47,7 @@ async function scrapeUfcPage(url: string) {
   await page.goto(url);
 
   let ufcEvent: UfcEvent = await page.evaluate(async (): Promise<UfcEvent> => {
-    console.log('START')
+    console.log('START');
     function getSingleElementByClassName(
       htmlElement: Element,
       className: string,
@@ -133,21 +133,41 @@ async function scrapeUfcPage(url: string) {
 
       //Setup fighter's name
       const getFighterName = (fighter, side) => {
-        const corner = getSingleElementByClassName(fighter, `c-listing-fight__corner-name c-listing-fight__corner-name--${side}`);
-        let fnameElement = getSingleElementByClassName(corner, 'c-listing-fight__corner-given-name');
-        fnameElement = fnameElement ? fnameElement : corner;
-        const firstName = fnameElement ? fnameElement.textContent.trim() : 'null';
-        
-        let lnameElement = getSingleElementByClassName(corner, 'c-listing-fight__corner-family-name');
-        lnameElement = lnameElement ? lnameElement : corner;
-        const lastName = lnameElement ? lnameElement.textContent.trim() : 'null';
-        
-        return firstName === lastName ? `${firstName}` : `${firstName} ${lastName}`
-      };
-      
-      const getFighterOutcome = (fighter) => {
-        const outcomeWrapper = getSingleElementByClassName(
+        const corner = getSingleElementByClassName(
           fighter,
+          `c-listing-fight__corner-name c-listing-fight__corner-name--${side}`,
+        );
+        let fnameElement = getSingleElementByClassName(
+          corner,
+          'c-listing-fight__corner-given-name',
+        );
+        fnameElement = fnameElement ? fnameElement : corner;
+        const firstName = fnameElement
+          ? fnameElement.textContent.trim()
+          : 'null';
+
+        let lnameElement = getSingleElementByClassName(
+          corner,
+          'c-listing-fight__corner-family-name',
+        );
+        lnameElement = lnameElement ? lnameElement : corner;
+        const lastName = lnameElement
+          ? lnameElement.textContent.trim()
+          : 'null';
+
+        return firstName === lastName
+          ? `${firstName}`
+          : `${firstName} ${lastName}`;
+      };
+
+      const getFighterOutcome = (fighter, side) => {
+        const corner = getSingleElementByClassName(
+          fighter,
+          `c-listing-fight__corner-body--${side}`,
+        );
+
+        const outcomeWrapper = getSingleElementByClassName(
+          corner,
           'c-listing-fight__outcome-wrapper  ',
         );
         const outcome = outcomeWrapper
@@ -157,10 +177,10 @@ async function scrapeUfcPage(url: string) {
               .trim()
           : '';
         return outcome as Outcomes;
-      }
+      };
 
       fighterObject.Name = getFighterName(fighter, side);
-      fighterObject.Outcome = getFighterOutcome(fighter);
+      fighterObject.Outcome = getFighterOutcome(fighter, side);
 
       return fighterObject;
     }
@@ -176,11 +196,14 @@ async function scrapeUfcPage(url: string) {
       if (oddsElementList.length != 2) throw new NotFoundException();
       const redOdds = oddsElementList[0].textContent;
       const blueOdds = oddsElementList[1].textContent;
-      
+
       const matchInfo: UfcMatchInfo = {
         Details: getMatchDetails(match),
         Red: { ...getFighterAttributes(match, redOdds, 'red'), Odds: redOdds },
-        Blue: { ...getFighterAttributes(match, redOdds, 'blue'), Odds: blueOdds },
+        Blue: {
+          ...getFighterAttributes(match, redOdds, 'blue'),
+          Odds: blueOdds,
+        },
       };
 
       data[`${matchInfo.Red.Name} vs ${matchInfo.Blue.Name}`] = matchInfo;
