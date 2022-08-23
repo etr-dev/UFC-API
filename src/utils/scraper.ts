@@ -69,6 +69,7 @@ async function scrapeUfcPage(url: string) {
       let DetailsObj: UfcMatchDetails = {
         Link: 'NOT FOUND',
         isLive: false,
+        isComplete: false,
         Method: 'NOT FOUND',
         Time: 'NOT FOUND',
         Round: 0,
@@ -117,6 +118,10 @@ async function scrapeUfcPage(url: string) {
         ),
       );
 
+      if (DetailsObj.Time !== 'NOT FOUND') {
+        DetailsObj.isComplete = true;
+      }
+
       return DetailsObj;
     }
 
@@ -129,6 +134,7 @@ async function scrapeUfcPage(url: string) {
         Name: '',
         Odds: '',
         Outcome: 'NOT FOUND' as Outcomes,
+        Image: '',
       };
 
       //Setup fighter's name
@@ -179,8 +185,37 @@ async function scrapeUfcPage(url: string) {
         return outcome as Outcomes;
       };
 
+      const getImageOfFighter = (fighter, side) => {
+        const corner = getSingleElementByClassName(
+          fighter,
+          `c-listing-fight__corner--${side}`,
+        );
+        if (!corner) {
+          console.log('Could not find corner in getImageOfFighter');
+          return null;
+        }
+
+        const imageElement = getSingleElementByClassName(
+          corner,
+          `image-style-event-fight-card-upper-body-of-standing-athlete`,
+        );
+        if (!imageElement) {
+          console.log('Could not find imageElement in getImageOfFighter');
+          return null;
+        }
+
+        const imageUrl = imageElement.getAttribute('src');
+        if (!imageUrl) {
+          console.log('Could not find imageUrl in getImageOfFighter');
+          return null;
+        }
+
+        return imageUrl;
+      }
+
       fighterObject.Name = getFighterName(fighter, side);
       fighterObject.Outcome = getFighterOutcome(fighter, side);
+      fighterObject.Image = getImageOfFighter(fighter, side);
 
       return fighterObject;
     }

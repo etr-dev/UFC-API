@@ -3,6 +3,8 @@ export interface UfcMatchDetails {
 
     isLive: boolean,
 
+    isComplete: boolean,
+
     Method: string,
 
     Time: string,

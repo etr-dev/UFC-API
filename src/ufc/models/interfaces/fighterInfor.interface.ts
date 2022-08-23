@@ -4,4 +4,5 @@ export interface UfcFighterInfo {
     Name: string;
     Odds: string;
     Outcome: Outcomes;
+    Image: string;
 }

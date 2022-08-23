@@ -28,7 +28,7 @@ const URL = createParamDecorator((data, req) => {
 export class UfcController {
   constructor(private readonly ufcService: UfcService) { }
   @CacheKey('nextEvent')
-  @CacheTTL(60)
+  @CacheTTL(600)
   @Get('nextEvent')
   nextEvent(): Promise<GetUfcEventResponse> {
     logServer('Next Event endpoint hit');
