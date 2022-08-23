@@ -118,7 +118,7 @@ async function scrapeUfcPage(url: string) {
         ),
       );
 
-      if (DetailsObj.Time !== 'NOT FOUND') {
+      if (DetailsObj.Round != 0) {
         DetailsObj.isComplete = true;
       }
 
