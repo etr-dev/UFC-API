@@ -1,6 +1,7 @@
-import { CacheKey, CacheTTL, CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
+import { CacheKey, CacheTTL, CACHE_MANAGER, Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import { SUCCESS_MESSAGE } from 'src/utils/constants';
+import { logError } from 'src/utils/log';
 import { getAllEventLinks, scrapeUfcPage } from 'src/utils/scraper';
 import { UfcEvent } from './models/entities/event.entity';
 import { GetUfcEventResponse, GetUfcEventsResponse, GetUfcLinksResponse } from './models/responses/eventResponse.response';
@@ -26,10 +27,19 @@ export class UfcService {
     let eventLinks: string[]
     let scraped: UfcEvent
     try {
+      eventLinks = await getAllEventLinks('https://www.ufc.com/events');
+      if (!eventLinks.length) throw 'empty event links';
+    } catch (e) {
       eventLinks = await getAllEventLinks('https://www.ufc.com/tickets');
+    }
+
+    if (!eventLinks.length) throw new InternalServerErrorException('EventLinks is empty');
+
+    try {
       scraped = await scrapeUfcPage(eventLinks[0]);
     } catch (e) {
-      console.log(e);
+      logError(e);
+      throw new InternalServerErrorException(`Error Scraping Page: ${eventLinks[0]}`)
     }
   
     return {message: SUCCESS_MESSAGE, data: scraped}
