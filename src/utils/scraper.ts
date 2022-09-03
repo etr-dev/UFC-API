@@ -67,12 +67,12 @@ async function scrapeUfcPage(url: string) {
 
     function getMatchDetails(match: Element): UfcMatchDetails {
       let DetailsObj: UfcMatchDetails = {
-        Link: 'NOT FOUND',
+        link: 'NOT FOUND',
         isLive: false,
         isComplete: false,
-        Method: 'NOT FOUND',
-        Time: 'NOT FOUND',
-        Round: 0,
+        method: 'NOT FOUND',
+        time: 'NOT FOUND',
+        round: 0,
       };
 
       const detailsElement = getSingleElementByClassName(
@@ -86,7 +86,7 @@ async function scrapeUfcPage(url: string) {
       ).attributes[1];
 
       if (matchLinkNode.name === 'data-fmid') {
-        DetailsObj.Link = `${matchLinkNode.baseURI}#${matchLinkNode.value}`;
+        DetailsObj.link = `${matchLinkNode.baseURI}#${matchLinkNode.value}`;
       }
 
       // return empty because if details can't be found something is wrong
@@ -98,19 +98,19 @@ async function scrapeUfcPage(url: string) {
       );
       DetailsObj.isLive = !(window.getComputedStyle(isLive).display === 'none');
 
-      DetailsObj.Method = getSingleElementTextContent(
+      DetailsObj.method = getSingleElementTextContent(
         detailsElement,
         'c-listing-fight__result-text method',
         'NOT FOUND',
       );
 
-      DetailsObj.Time = getSingleElementTextContent(
+      DetailsObj.time = getSingleElementTextContent(
         detailsElement,
         'c-listing-fight__result-text time',
         'NOT FOUND',
       );
 
-      DetailsObj.Round = Number(
+      DetailsObj.round = Number(
         getSingleElementTextContent(
           detailsElement,
           'c-listing-fight__result-text round',
@@ -118,7 +118,7 @@ async function scrapeUfcPage(url: string) {
         ),
       );
 
-      if (DetailsObj.Round != 0) {
+      if (DetailsObj.round != 0) {
         DetailsObj.isComplete = true;
       }
 
@@ -131,10 +131,10 @@ async function scrapeUfcPage(url: string) {
       side: string,
     ): UfcFighterInfo {
       let fighterObject: UfcFighterInfo = {
-        Name: '',
-        Odds: '',
-        Outcome: 'NOT FOUND' as Outcomes,
-        Image: '',
+        name: '',
+        odds: '',
+        outcome: 'NOT FOUND' as Outcomes,
+        image: '',
       };
 
       //Setup fighter's name
@@ -213,9 +213,9 @@ async function scrapeUfcPage(url: string) {
         return imageUrl;
       }
 
-      fighterObject.Name = getFighterName(fighter, side);
-      fighterObject.Outcome = getFighterOutcome(fighter, side);
-      fighterObject.Image = getImageOfFighter(fighter, side);
+      fighterObject.name = getFighterName(fighter, side);
+      fighterObject.outcome = getFighterOutcome(fighter, side);
+      fighterObject.image = getImageOfFighter(fighter, side);
 
       return fighterObject;
     }
@@ -233,15 +233,27 @@ async function scrapeUfcPage(url: string) {
       const blueOdds = oddsElementList[1].textContent;
 
       const matchInfo: UfcMatchInfo = {
-        Details: getMatchDetails(match),
-        Red: { ...getFighterAttributes(match, redOdds, 'red'), Odds: redOdds },
+        details: getMatchDetails(match),
+        Red: { ...getFighterAttributes(match, redOdds, 'red'), odds: redOdds },
         Blue: {
           ...getFighterAttributes(match, redOdds, 'blue'),
-          Odds: blueOdds,
+          odds: blueOdds,
         },
       };
 
-      data[`${matchInfo.Red.Name} vs ${matchInfo.Blue.Name}`] = matchInfo;
+      if (matchInfo.details.isComplete) {
+        let result = '';
+        if (matchInfo.Red.outcome === 'WIN') {
+          result = 'RED'
+        } else if (matchInfo.Blue.outcome === 'WIN') {
+          result = 'BLUE';
+        } else {
+          result = matchInfo.Red.outcome;
+        }
+        matchInfo.details.result = result;
+      }
+
+      data[`${matchInfo.Red.name} vs ${matchInfo.Blue.name}`] = matchInfo;
     }
 
     //CREATING THE OBJECT THAT GETS RETURNED
@@ -266,7 +278,7 @@ async function scrapeUfcPage(url: string) {
     ufcEvent.url = window.location.href;
     ufcEvent.date = document.getElementsByClassName(
       'c-event-fight-card-broadcaster__time tz-change-inner',
-    )[0].textContent;
+    )[0].textContent.trim();
     try {
       const imageLink =
         document.getElementsByTagName('SOURCE')[0].attributes[0].value;

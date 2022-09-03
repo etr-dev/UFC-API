@@ -1,13 +1,15 @@
 export interface UfcMatchDetails {
-    Link: string,
+  link: string;
 
-    isLive: boolean,
+  isLive: boolean;
 
-    isComplete: boolean,
+  isComplete: boolean;
 
-    Method: string,
+  result?: string;
 
-    Time: string,
-    
-    Round: number,
+  method: string;
+
+  time: string;
+
+  round: number;
 }
